@@ -1,0 +1,1 @@
+export const HomePage = () => <div><h2>ホーム画面（エンジニア2が開発中）</h2></div>;
