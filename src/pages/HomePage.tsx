@@ -47,6 +47,25 @@ export const HomePage = () => {
       {/* 巨大なストップボタン */}
       <div style={{ margin: '40px 0' }}>
         <button
+<<<<<<< HEAD
+  onClick={handleStop}
+  style={{
+    width: '180px',
+    height: '180px',
+    borderRadius: '50%',
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    fontSize: '22px',
+    fontWeight: 'bold',
+    border: 'none',
+    cursor: 'pointer',
+    boxShadow: '0 8px 20px rgba(239, 68, 68, 0.4)',
+    transition: 'transform 0.1s',
+  }}
+>
+  今すぐやめる！
+</button>
+=======
           onClick={handleStop}
           style={{
             width: '180px',
@@ -64,6 +83,7 @@ export const HomePage = () => {
         >
           今すぐやめる！
         </button>
+>>>>>>> origin/main
       </div>
     </div>
   );
