@@ -20,7 +20,7 @@ export const HomePage = () => {
   return (
     <div style={{ textAlign: 'center', padding: '20px' }}>
       <h1 style={{ fontSize: '22px', color: '#1f2937' }}>何をやめたいですか？</h1>
-      <p style={{ color: '#6b7280', fontSize: '14px' }}>今見てしまっているアプリを選んでください</p>
+      <p style={{ color: '#6b7280', fontSize: '14px' }}>今開いてしまっているアプリを選んでください</p>
 
       {/* アプリ選択ボタン一覧 */}
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', margin: '24px 0' }}>
