@@ -22,6 +22,74 @@ export const HomePage = () => {
     }
   };
 
+  // 「はい（見る）」が押されたときに外部アプリを起動する関数
+  const handleLaunchApp = () => {
+    if (!targetAppToStop) return;
+
+    const ua = navigator.userAgent.toLowerCase();
+    const isAndroid = /android/.test(ua);
+
+    // 👇 Partial をつけて未登録のアプリがあってもエラーが出ないように修正
+    const appConfigs: Partial<Record<TargetApp, { scheme: string; intent: string; fallback: string }>> = {
+      YouTube: {
+        scheme: 'youtube://',
+        intent: 'intent://www.youtube.com#Intent;scheme=https;package=com.google.android.youtube;end',
+        fallback: 'https://www.youtube.com'
+      },
+      Instagram: {
+        scheme: 'instagram://',
+        intent: 'intent://instagram.com#Intent;scheme=https;package=com.instagram.android;end',
+        fallback: 'https://instagram.com'
+      },
+      TikTok: {
+        scheme: 'snssdk1233://',
+        intent: 'intent://tiktok.com#Intent;scheme=https;package=com.zhiliaoapp.musically;end',
+        fallback: 'https://tiktok.com'
+      },
+      X: {
+        scheme: 'twitter://',
+        intent: 'intent://x.com#Intent;scheme=https;package=com.twitter.android;end',
+        fallback: 'https://x.com'
+      },
+      'ゲーム': {
+        scheme: '',
+        intent: '',
+        fallback: 'https://google.com'
+      },
+      'その他': {
+        scheme: '',
+        intent: '',
+        fallback: 'https://google.com'
+      }
+    };
+
+    const config = appConfigs[targetAppToStop];
+
+    if (!config || !config.fallback) {
+      alert(`「${targetAppToStop}」への自動遷移には未対応です。`);
+      setTargetAppToStop(null);
+      return;
+    }
+
+    // モーダルを閉じる
+    setTargetAppToStop(null);
+
+    if (isAndroid) {
+      // Android Chrome等：Intent構文で起動
+      window.location.href = config.intent || config.fallback;
+    } else {
+      // iOS Safari等：URLスキームで起動、なければブラウザ版へ
+      if (config.scheme) {
+        window.location.href = config.scheme;
+        setTimeout(() => {
+          window.location.href = config.fallback;
+        }, 1500);
+      } else {
+        window.location.href = config.fallback;
+      }
+    }
+  };
+
   return (
     <div style={{ padding: '20px' }}>
       {/* 1. 今日の記録カード */}
@@ -157,7 +225,7 @@ export const HomePage = () => {
             <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '16px 0 24px' }}>本当に見る？</div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button
-                onClick={() => setTargetAppToStop(null)}
+                onClick={handleLaunchApp}
                 style={{
                   flex: 1, padding: '12px', borderRadius: '12px',
                   border: '1px solid #d1d5db', background: '#f9fafb',
