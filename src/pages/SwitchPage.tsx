@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
+import { Confetti } from '../components/Confetti';
 import type { TargetApp } from '../types';
 
-// カウントダウン用の数字配列（5から1まで）
 const COUNTDOWN_LIST: number[] = Array.of(5, 4, 3, 2, 1);
 
 export const SwitchPage = () => {
@@ -16,6 +16,7 @@ export const SwitchPage = () => {
 
   const [countdown, setCountdown] = useState<number>(5);
   const [selectedActionIndex, setSelectedActionIndex] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
   const currentAction = actions[selectedActionIndex] || { title: '深呼吸をしよう', durationMinutes: 1 };
 
   useEffect(() => {
@@ -24,7 +25,6 @@ export const SwitchPage = () => {
     }
   }, [appFromUrl, currentApp, setCurrentApp]);
 
-  // 5秒カウントダウン処理
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -32,13 +32,16 @@ export const SwitchPage = () => {
     }
   }, [countdown]);
 
-  // 「はい！」を押して記録完了
+  // 「はい！」を押して紙吹雪を飛ばす
   const handleDone = () => {
+    setShowConfetti(true);
     addLog(currentAction.title, currentAction.durationMinutes);
-    navigate('/dashboard');
+    // 0.8秒紙吹雪を見せてから画面移動
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 800);
   };
 
-  // 「まだ！」を押して次のアクションへ切り替え
   const handleNotYet = () => {
     setCountdown(5);
     setSelectedActionIndex((prev) => (prev + 1) % actions.length);
@@ -46,11 +49,12 @@ export const SwitchPage = () => {
 
   return (
     <div style={{ padding: '24px 20px', textAlign: 'center' }}>
+      {showConfetti && <Confetti />}
+
       <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'bold', marginBottom: '8px' }}>
         切り替えタイム（{target}）
       </div>
 
-      {/* 1. アクション ＆ 5 4 3 2 1 カウントカード */}
       <div style={{
         background: '#ffffff',
         borderRadius: '20px',
@@ -62,7 +66,6 @@ export const SwitchPage = () => {
           {currentAction.title}
         </h2>
 
-        {/* 5 4 3 2 1 の数字表示 */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', margin: '20px 0' }}>
           {COUNTDOWN_LIST.map((num: number) => (
             <span
@@ -85,7 +88,6 @@ export const SwitchPage = () => {
         </p>
       </div>
 
-      {/* 2. 「できた？」と「はい！」「まだ！」ボタン */}
       <div style={{ marginTop: '24px' }}>
         <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>
           できた？

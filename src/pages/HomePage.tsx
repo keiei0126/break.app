@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import type { TargetApp } from '../types';
@@ -8,8 +8,32 @@ export const HomePage = () => {
   const { logs, setCurrentApp } = useApp();
   const [targetAppToStop, setTargetAppToStop] = useState<TargetApp | null>(null);
 
+  // 👇 【新機能】YouTube等から戻ってきた時の検知状態
+  const [returnInfo, setReturnInfo] = useState<{ app: string; minutes: number } | null>(null);
+
   const todayCount = logs.length;
   const totalMinutes = logs.reduce((sum, log) => sum + log.savedMinutes, 0);
+
+  // 画面に戻ってきた（ブラウザを再び開いた）瞬間に経過時間をチェック
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        const launchTimeStr = localStorage.getItem('kingdom_launch_time');
+        const launchAppStr = localStorage.getItem('kingdom_launch_app');
+        if (launchTimeStr && launchAppStr) {
+          const launchTime = Number(launchTimeStr);
+          const elapsedMinutes = Math.max(1, Math.round((Date.now() - launchTime) / (1000 * 60)));
+          setReturnInfo({ app: launchAppStr, minutes: elapsedMinutes });
+          // チェックしたらクリア
+          localStorage.removeItem('kingdom_launch_time');
+          localStorage.removeItem('kingdom_launch_app');
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   const handleAppClick = (app: TargetApp) => {
     setTargetAppToStop(app);
@@ -22,16 +46,23 @@ export const HomePage = () => {
     }
   };
 
+  // 「はい（見る）」を押してYouTube等へ飛ぶとき
   const handleLaunchApp = () => {
     if (!targetAppToStop) return;
+
+    // 👇 飛んだ時刻とアプリ名を記録しておく
+    localStorage.setItem('kingdom_launch_time', Date.now().toString());
+    localStorage.setItem('kingdom_launch_app', targetAppToStop);
+
     const urls: Record<string, string> = {
       YouTube: 'https://www.youtube.com',
       Instagram: 'https://instagram.com',
       TikTok: 'https://tiktok.com',
       X: 'https://x.com',
     };
+    const target = targetAppToStop;
     setTargetAppToStop(null);
-    window.location.href = urls[targetAppToStop] || 'https://google.com';
+    window.location.href = urls[target] || 'https://google.com';
   };
 
   return (
@@ -113,7 +144,6 @@ export const HomePage = () => {
         開こうとしているアプリを選択：
       </div>
 
-      {/* アプリ一覧グリッド */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         {[
           { name: 'YouTube', icon: '▶️' },
@@ -143,7 +173,7 @@ export const HomePage = () => {
         ))}
       </div>
 
-      {/* 4. Figma警告ポップアップ（STOP！本当に見る？） */}
+      {/* 4. STOP警告モーダル */}
       {targetAppToStop && (
         <div style={{
           position: 'fixed',
@@ -153,7 +183,7 @@ export const HomePage = () => {
           zIndex: 1000, padding: '20px',
         }}>
           <div style={{
-            background: '#ffdada', // Figmaの淡い赤/ピンク
+            background: '#ffdada',
             borderRadius: '24px',
             padding: '32px 24px',
             maxWidth: '320px',
@@ -190,6 +220,56 @@ export const HomePage = () => {
                 いいえ
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. 👇 【新機能】YouTubeから戻ってきた時の「生還おかえり」モーダル！ */}
+      {returnInfo && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 2000, padding: '20px',
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '24px',
+            padding: '28px 24px',
+            maxWidth: '320px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+          }}>
+            <span style={{ fontSize: '40px' }}>👏</span>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', margin: '12px 0 8px' }}>
+              おかえりなさい！
+            </h3>
+            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.6', margin: '0 0 20px' }}>
+              <strong>{returnInfo.app}</strong> を約 <strong style={{ color: '#ef4444', fontSize: '18px' }}>{returnInfo.minutes}分</strong> 見ていたね。<br />
+              沼にハマりきる前に戻ってこれたの、ナイス判断！
+            </p>
+            <button
+              onClick={() => {
+                setReturnInfo(null);
+                navigate('/switch?app=YouTube');
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '24px',
+                border: 'none',
+                background: '#007404',
+                color: '#ffffff',
+                fontSize: '15px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(0,116,4,0.3)',
+              }}
+            >
+              深呼吸してリセットする 🌿
+            </button>
           </div>
         </div>
       )}
