@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 
-// リマインド間隔の選択肢（3分〜30分、OFF）
 const REMIND_OPTIONS = Array.of(3, 5, 10, 15, 20, 30, 0);
 
 export const SettingsPage = () => {
@@ -22,13 +21,11 @@ export const SettingsPage = () => {
     return saved ? Number(saved) : 60;
   });
 
-  // リマインド間隔（分単位）
   const [remindInterval, setRemindInterval] = useState<number>(() => {
     const saved = localStorage.getItem('kingdom_remind_interval');
     return saved ? Number(saved) : 10;
   });
 
-  // カスタム入力用の状態
   const [customMinutes, setCustomMinutes] = useState<string>('');
 
   const [appsStatus, setAppsStatus] = useState<Record<string, boolean>>(() => {
@@ -37,6 +34,7 @@ export const SettingsPage = () => {
   });
 
   const [goalType, setGoalType] = useState<'count' | 'time'>('count');
+  const [copiedText, setCopiedText] = useState(false);
 
   const requestNotificationPermission = async () => {
     if ('Notification' in window && Notification.permission !== 'granted') {
@@ -69,7 +67,6 @@ export const SettingsPage = () => {
     setAppsStatus((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
-  // カスタム分数の適用
   const handleApplyCustomMinutes = () => {
     const val = parseInt(customMinutes, 10);
     if (!isNaN(val) && val > 0) {
@@ -80,6 +77,15 @@ export const SettingsPage = () => {
       alert('1分以上の半角数字を入力してください');
     }
   };
+
+  // URLをクリップボードにコピー
+  const handleCopyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
+  };
+
+  const currentOrigin = window.location.origin;
 
   return (
     <div style={{ padding: '20px' }}>
@@ -96,7 +102,52 @@ export const SettingsPage = () => {
         </div>
       </div>
 
-      {/* 2. 視聴中のリマインド間隔設定カード（選択肢拡張 ＆ 自由入力） */}
+      {/* 2. 👇 【新機能】iPhoneショートカット自動連携の設定ガイド！ */}
+      <div style={{ background: '#ffffff', borderRadius: '20px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)', border: '1px solid #dcfce7' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '20px' }}>📱</span>
+          <div style={{ fontSize: '14px', color: '#111827', fontWeight: 'bold' }}>
+            iPhone自動連携ガイド
+          </div>
+        </div>
+        <p style={{ fontSize: '12px', color: '#4b5563', lineHeight: '1.6', margin: '0 0 12px' }}>
+          iOSの「ショートカット」アプリを使うと、YouTubeの起動・終了に自動でNoDopaが割り込むように設定できます。
+        </p>
+
+        <details style={{ background: '#f9fafb', padding: '12px', borderRadius: '12px', fontSize: '12px', color: '#374151', lineHeight: '1.7', marginBottom: '12px' }}>
+          <summary style={{ fontWeight: 'bold', color: '#007404', cursor: 'pointer' }}>
+            詳しい設定手順を見る（タップで開く）
+          </summary>
+          <ol style={{ paddingLeft: '18px', margin: '8px 0' }}>
+            <li>iPhoneの「ショートカット」アプリを開く</li>
+            <li>「オートメーション」タブ ➔ 右上の「＋」</li>
+            <li>「App」を選び、「YouTube」を選択</li>
+            <li><strong>【起動時】</strong>「開いている」＆「すぐに実行」にチェック</li>
+            <li><strong>【終了時】</strong>「閉じている」＆「すぐに実行」にチェック</li>
+            <li>アクションで「URLを開く」を追加し、下のURLを貼り付ける</li>
+          </ol>
+        </details>
+
+        <button
+          onClick={() => handleCopyUrl(`${currentOrigin}/switch?app=YouTube`)}
+          style={{
+            width: '100%',
+            padding: '10px',
+            background: copiedText ? '#007404' : '#f0fdf4',
+            color: copiedText ? '#fff' : '#007404',
+            border: '1px solid #007404',
+            borderRadius: '12px',
+            fontWeight: 'bold',
+            fontSize: '12px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+        >
+          {copiedText ? '✅ 連携用URLをコピーしました！' : '📋 連携用URLをワンタップコピー'}
+        </button>
+      </div>
+
+      {/* 3. 視聴中のリマインド間隔 */}
       <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ fontSize: '14px', color: '#111827', fontWeight: 'bold' }}>
@@ -110,7 +161,6 @@ export const SettingsPage = () => {
           指定した時間が経過すると、通知で深呼吸や休憩を促します。
         </p>
 
-        {/* 豊富なクイック選択肢 */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '14px' }}>
           {REMIND_OPTIONS.map((mins) => (
             <button
@@ -135,7 +185,6 @@ export const SettingsPage = () => {
           ))}
         </div>
 
-        {/* 自由な分数入力欄 */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: '#f9fafb', padding: '8px 12px', borderRadius: '12px' }}>
           <span style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold', whiteSpace: 'nowrap' }}>自由指定:</span>
           <input
@@ -158,7 +207,7 @@ export const SettingsPage = () => {
         </div>
       </div>
 
-      {/* 3. 代替アクション管理 */}
+      {/* 4. 代替アクション管理 */}
       <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
         <div style={{ fontSize: '14px', color: '#111827', fontWeight: 'bold', marginBottom: '12px' }}>
           🎯 代替アクションの管理
@@ -202,7 +251,7 @@ export const SettingsPage = () => {
         </form>
       </div>
 
-      {/* 4. 目標設定調整 */}
+      {/* 5. 目標設定調整 */}
       <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
         <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'bold', marginBottom: '12px' }}>目標の種類</div>
         <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
@@ -232,7 +281,7 @@ export const SettingsPage = () => {
         </div>
       </div>
 
-      {/* 5. 制限アプリON/OFF */}
+      {/* 6. 制限アプリON/OFF */}
       <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', marginBottom: '24px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
         <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'bold', marginBottom: '12px' }}>制限するアプリ</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
