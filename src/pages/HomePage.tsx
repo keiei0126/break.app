@@ -22,227 +22,172 @@ export const HomePage = () => {
     }
   };
 
-  // 「はい（見る）」が押されたときに外部アプリを起動する関数
   const handleLaunchApp = () => {
     if (!targetAppToStop) return;
-
-    const ua = navigator.userAgent.toLowerCase();
-    const isAndroid = /android/.test(ua);
-
-    // 👇 Partial をつけて未登録のアプリがあってもエラーが出ないように修正
-    const appConfigs: Partial<Record<TargetApp, { scheme: string; intent: string; fallback: string }>> = {
-      YouTube: {
-        scheme: 'youtube://',
-        intent: 'intent://www.youtube.com#Intent;scheme=https;package=com.google.android.youtube;end',
-        fallback: 'https://www.youtube.com'
-      },
-      Instagram: {
-        scheme: 'instagram://',
-        intent: 'intent://instagram.com#Intent;scheme=https;package=com.instagram.android;end',
-        fallback: 'https://instagram.com'
-      },
-      TikTok: {
-        scheme: 'snssdk1233://',
-        intent: 'intent://tiktok.com#Intent;scheme=https;package=com.zhiliaoapp.musically;end',
-        fallback: 'https://tiktok.com'
-      },
-      X: {
-        scheme: 'twitter://',
-        intent: 'intent://x.com#Intent;scheme=https;package=com.twitter.android;end',
-        fallback: 'https://x.com'
-      },
-      'ゲーム': {
-        scheme: '',
-        intent: '',
-        fallback: 'https://google.com'
-      },
-      'その他': {
-        scheme: '',
-        intent: '',
-        fallback: 'https://google.com'
-      }
+    const urls: Record<string, string> = {
+      YouTube: 'https://www.youtube.com',
+      Instagram: 'https://instagram.com',
+      TikTok: 'https://tiktok.com',
+      X: 'https://x.com',
     };
-
-    const config = appConfigs[targetAppToStop];
-
-    if (!config || !config.fallback) {
-      alert(`「${targetAppToStop}」への自動遷移には未対応です。`);
-      setTargetAppToStop(null);
-      return;
-    }
-
-    // モーダルを閉じる
     setTargetAppToStop(null);
-
-    if (isAndroid) {
-      // Android Chrome等：Intent構文で起動
-      window.location.href = config.intent || config.fallback;
-    } else {
-      // iOS Safari等：URLスキームで起動、なければブラウザ版へ
-      if (config.scheme) {
-        window.location.href = config.scheme;
-        setTimeout(() => {
-          window.location.href = config.fallback;
-        }, 1500);
-      } else {
-        window.location.href = config.fallback;
-      }
-    }
+    window.location.href = urls[targetAppToStop] || 'https://google.com';
   };
 
   return (
     <div style={{ padding: '20px' }}>
-      {/* 1. 今日の記録カード */}
-      <div style={{
-        background: '#fff',
-        borderRadius: '16px',
-        padding: '16px 20px',
-        marginBottom: '12px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-      }}>
-        <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'bold' }}>今日の記録</div>
-        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', marginTop: '6px' }}>
-          {todayCount > 0 ? `🎉 目標達成中！（${todayCount}回 回避）` : 'まだ記録はありません'}
+      {/* 1. 上部2分割サマリーカード */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+        <div
+          onClick={() => navigate('/dashboard')}
+          style={{
+            flex: 1,
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '16px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'bold' }}>脱出成功回数</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', margin: '8px 0 4px' }}>
+            {todayCount}<span style={{ fontSize: '14px', color: '#6b7280' }}>/10回</span>
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'right' }}>&gt;</div>
+        </div>
+
+        <div
+          onClick={() => navigate('/dashboard')}
+          style={{
+            flex: 1,
+            background: '#ffffff',
+            borderRadius: '16px',
+            padding: '16px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'bold' }}>合計節約時間</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#007404', margin: '8px 0 4px' }}>
+            {totalMinutes}<span style={{ fontSize: '14px', color: '#6b7280' }}>分</span>
+          </div>
+          <div style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'right' }}>&gt;</div>
         </div>
       </div>
 
-      {/* 2. 今日の合計時間カード */}
+      {/* 2. 今日のひとことカード */}
       <div style={{
-        background: '#fff',
+        background: '#ffffff',
         borderRadius: '16px',
-        padding: '16px 20px',
+        padding: '20px',
         marginBottom: '24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
       }}>
-        <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'bold' }}>⏰ 今日の合計節約時間</div>
-        <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#10b981', marginTop: '4px' }}>
-          {totalMinutes} <span style={{ fontSize: '16px', color: '#4b5563' }}>分</span>
+        <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 'bold', marginBottom: '8px' }}>
+          今日のひとこと
         </div>
+        <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1f2937', marginBottom: '16px' }}>
+          見る前に深呼吸してみない？
+        </div>
+        <button
+          onClick={() => navigate('/switch?app=YouTube')}
+          style={{
+            width: '100%',
+            padding: '12px',
+            background: '#007404',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '24px',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(0, 116, 4, 0.2)',
+          }}
+        >
+          切り替えを始める ➔
+        </button>
       </div>
 
-      <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#374151', marginBottom: '12px' }}>
+      {/* 3. アプリ選択 */}
+      <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#4b5563', marginBottom: '12px', textAlign: 'center' }}>
         開こうとしているアプリを選択：
       </div>
 
-      {/* 3. アプリ一覧グリッド */}
+      {/* アプリ一覧グリッド */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <button
-          onClick={() => handleAppClick('YouTube')}
-          style={{
-            background: '#fff',
-            border: 'none',
-            borderRadius: '16px',
-            padding: '24px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            cursor: 'pointer',
-          }}
-        >
-          <span style={{ fontSize: '32px' }}>▶️</span>
-          <span style={{ fontWeight: 'bold', color: '#ef4444' }}>YouTube</span>
-        </button>
-
-        <button
-          onClick={() => handleAppClick('Instagram')}
-          style={{
-            background: '#fff',
-            border: 'none',
-            borderRadius: '16px',
-            padding: '24px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            cursor: 'pointer',
-          }}
-        >
-          <span style={{ fontSize: '32px' }}>📷</span>
-          <span style={{ fontWeight: 'bold', color: '#ec4899' }}>Instagram</span>
-        </button>
-
-        <button
-          onClick={() => handleAppClick('TikTok')}
-          style={{
-            background: '#fff',
-            border: 'none',
-            borderRadius: '16px',
-            padding: '24px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            cursor: 'pointer',
-          }}
-        >
-          <span style={{ fontSize: '32px' }}>🎵</span>
-          <span style={{ fontWeight: 'bold', color: '#111827' }}>TikTok</span>
-        </button>
-
-        <button
-          onClick={() => handleAppClick('X')}
-          style={{
-            background: '#fff',
-            border: 'none',
-            borderRadius: '16px',
-            padding: '24px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            cursor: 'pointer',
-          }}
-        >
-          <span style={{ fontSize: '32px' }}>✖️</span>
-          <span style={{ fontWeight: 'bold', color: '#1f2937' }}>X (Twitter)</span>
-        </button>
+        {[
+          { name: 'YouTube', icon: '▶️' },
+          { name: 'Instagram', icon: '📷' },
+          { name: 'TikTok', icon: '🎵' },
+          { name: 'X', icon: '✖️' },
+        ].map((app) => (
+          <button
+            key={app.name}
+            onClick={() => handleAppClick(app.name as TargetApp)}
+            style={{
+              background: '#ffffff',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '20px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ fontSize: '32px' }}>{app.icon}</span>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#374151' }}>{app.name}</span>
+          </button>
+        ))}
       </div>
 
-      {/* 4. STOPモーダル */}
+      {/* 4. Figma警告ポップアップ（STOP！本当に見る？） */}
       {targetAppToStop && (
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0, 0, 0, 0.4)',
+          background: 'rgba(0, 0, 0, 0.45)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 1000, padding: '20px',
         }}>
           <div style={{
-            background: '#fff',
+            background: '#ffdada', // Figmaの淡い赤/ピンク
             borderRadius: '24px',
             padding: '32px 24px',
             maxWidth: '320px',
             width: '100%',
             textAlign: 'center',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
           }}>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: '#ef4444' }}>STOP !</div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '16px 0 24px' }}>本当に見る？</div>
+            <div style={{ fontSize: '28px', fontWeight: '900', color: '#111827', letterSpacing: '1px' }}>
+              STOP !
+            </div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '14px 0 24px' }}>
+              本当に見る？
+            </div>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button
                 onClick={handleLaunchApp}
                 style={{
-                  flex: 1, padding: '12px', borderRadius: '12px',
-                  border: '1px solid #d1d5db', background: '#f9fafb',
+                  flex: 1, padding: '12px', borderRadius: '24px',
+                  border: '1px solid #d1d5db', background: '#ffffff',
                   fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
                 }}
               >
-                はい（見る）
+                はい
               </button>
               <button
                 onClick={handleConfirmStop}
                 style={{
-                  flex: 1, padding: '12px', borderRadius: '12px',
-                  border: 'none', background: '#10b981', color: '#fff',
+                  flex: 1, padding: '12px', borderRadius: '24px',
+                  border: 'none', background: '#007404', color: '#ffffff',
                   fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
+                  boxShadow: '0 4px 10px rgba(0,116,4,0.3)',
                 }}
               >
-                いいえ（止める）
+                いいえ
               </button>
             </div>
           </div>
