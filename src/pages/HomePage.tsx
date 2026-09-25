@@ -15,9 +15,9 @@ export const HomePage = () => {
   const todayCount = logs.length;
   const totalMinutes = logs.reduce((sum, log) => sum + log.savedMinutes, 0);
 
-  // 称号ランクの取得
   const rank = getRankInfo(todayCount);
 
+  // 生還検知（YouTube等から戻ってきたとき）
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -47,10 +47,30 @@ export const HomePage = () => {
     }
   };
 
+  // 視聴中リマインド通知予約
+  const scheduleReminderNotification = (targetApp: string) => {
+    const remindMinsStr = localStorage.getItem('kingdom_remind_interval');
+    const remindMins = remindMinsStr ? Number(remindMinsStr) : 10;
+    if (remindMins <= 0) return;
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setTimeout(() => {
+        new Notification(`🔔 ${remindMins}分が経過しました！`, {
+          body: `${targetApp} の見すぎに注意！そろそろ深呼吸をして現実に戻りませんか？`,
+          icon: '/nodopa-icon.png',
+        });
+      }, remindMins * 60 * 1000);
+    }
+  };
+
+  // 👇 【バグ修正】NoDopaの画面をWeb版YouTubeで上書きしないように修正！
   const handleLaunchApp = () => {
     if (!targetAppToStop) return;
+
     localStorage.setItem('kingdom_launch_time', Date.now().toString());
     localStorage.setItem('kingdom_launch_app', targetAppToStop);
+
+    scheduleReminderNotification(targetAppToStop);
 
     const ua = navigator.userAgent.toLowerCase();
     const isAndroid = /android/.test(ua);
@@ -82,32 +102,32 @@ export const HomePage = () => {
 
     const config = appConfigs[targetAppToStop];
     setTargetAppToStop(null);
-    if (!config || !config.fallback) return;
+
+    if (!config) return;
 
     if (isAndroid) {
       window.location.href = config.intent || config.fallback;
     } else {
+      // iOS：アプリ起動用スキームを叩くだけ（NoDopa画面を上書きしない！）
       if (config.scheme) {
         window.location.href = config.scheme;
-        setTimeout(() => { window.location.href = config.fallback; }, 1500);
       } else {
-        window.location.href = config.fallback;
+        window.open(config.fallback, '_blank');
       }
     }
   };
-  <img src="/nodopa-icon.png" alt="NoDopa Icon" style={{ width: '38px', height: '38px', borderRadius: '10px' }} />
 
   return (
     <div style={{ padding: '20px' }}>
       {/* NoDopa ロゴ */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '12px' }}>
-        <span style={{ fontSize: '28px' }}>🍃</span>
+        <img src="/nodopa-icon.png" alt="NoDopa" style={{ width: '32px', height: '32px', borderRadius: '8px' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
         <span style={{ fontSize: '24px', fontWeight: '900', color: '#111827', letterSpacing: '-0.5px' }}>
           NoDopa
         </span>
       </div>
 
-      {/* 👇 【新機能】現在の10段階称号ランクバッジ！ */}
+      {/* 称号ランクバッジ */}
       <div style={{
         background: '#ffffff',
         borderRadius: '16px',
